@@ -9,12 +9,40 @@ fun main(args: Array<String>) {
     val n = 2
     val result = filterElementsByFrequency(list, n)
     println("Элементы, встречающиеся более $n раз: $result")
+
+    val sequence = generateSequence(1) { (1..100).random() }
+
+    val result2 = sequence.take(1000).filterByFrequency(n).take(10).toList()
+    println(result2)
+}
+
+fun <T> Sequence<T>.filterByFrequency(n: Int): Sequence<T> {
+
+    val elementToCount = mutableMapOf<T, Int>().withDefault { 0 }
+    val uniqueElements = mutableSetOf<T>()
+
+    return this.filter { element ->
+        val count = elementToCount.getValue(element)
+        elementToCount[element] = count + 1
+        count + 1 <= n && uniqueElements.add(element)
+    }
 }
 
 fun <T> filterElementsByFrequency(list: List<T>, n: Int): List<T> {
-    // Создаем мапу для подсчета частоты встречаемости элементов
-    val elementCountMap = list.groupingBy { it }.eachCount()
 
-    // Фильтруем элементы списка, оставляя только те, которые встречаются более n раз
-    return list.filter { (elementCountMap[it] ?: 0) > n }
+    tailrec fun filterRecursively(inputList: List<T>, result: List<T> = emptyList()): List<T> {
+        if (inputList.isEmpty()) {
+            return result
+        }
+
+        val head = inputList.first()
+        val count = inputList.count { it == head }
+
+        val remainingList = inputList.filter { it != head }
+        val updatedResult = if (count > n) result + head else result
+
+        return filterRecursively(remainingList, updatedResult)
+    }
+
+    return filterRecursively(list)
 }
